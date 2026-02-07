@@ -1,4 +1,5 @@
 <?php 
+session_start(); // Don't forget this at the very top!
 include 'config.php'; 
 $error_msg = "";
 
@@ -6,28 +7,39 @@ if(isset($_POST['login'])){
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = mysqli_real_escape_string($conn, $_POST['password']);
     
-    $res = mysqli_query($conn, "SELECT * FROM users WHERE email='$email' AND password='$password'");
+    // 1. First, search only by Email to see if the account exists
+    $res = mysqli_query($conn, "SELECT * FROM users WHERE email='$email'");
     
     if(mysqli_num_rows($res) > 0){
         $user = mysqli_fetch_assoc($res);
         
-        if($user['role'] == 'admin' || $user['status'] == 'approved'){
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['email'] = $user['email'];
+        // 2. Now, check if the password matches
+        if($user['password'] == $password) { // Use password_verify() if you hashed them!
+            
+            // 3. Finally, check the account status/role
+            if($user['role'] == 'admin' || $user['status'] == 'approved'){
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['email'] = $user['email'];
 
-            if($user['role'] == 'admin') {
-                header("Location: admin_dash.php");
-                exit();
+                if($user['role'] == 'admin') {
+                    header("Location: admin_dash.php");
+                    exit();
+                } else {
+                    header("Location: engineer_dash.php");
+                    exit();
+                }
             } else {
-                header("Location: engineer_dash.php");
-                exit();
+                // Account exists and password is correct, but not approved
+                $error_msg = "Your account is still pending for approval.";
             }
         } else {
-            $error_msg = "Your account is still pending for approval.";
+            // Email exists, but password was wrong
+            $error_msg = "Incorrect password.";
         }
     } else {
-        $error_msg = "Incorrect email or password.";
+        // Email does not exist in the database at all
+        $error_msg = "No account found with that email.";
     }
 }
 ?>
