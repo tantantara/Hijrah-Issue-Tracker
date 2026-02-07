@@ -9,6 +9,12 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
     $user = "root";
     $pass = "";
     $db   = "tracking_system";
+} else {
+    // Setting for online(InfinityFree)
+    $host = "sql110.infinityfree.com";
+    $user = "if0_40933375";
+    $pass = "higetrack123"; 
+    $db   = "if0_40933375_tracking_system";
 }
 
 $conn = mysqli_connect($host, $user, $pass, $db);
